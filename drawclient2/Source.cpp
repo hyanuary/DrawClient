@@ -119,15 +119,26 @@ int main()
 		return 1;
 	}
 
-	//creating the address
+	//creating the sending address
 	sockaddr_in send_address;
 	send_address.sin_family = AF_INET;
 	send_address.sin_port = htons(1300);
-	send_address.sin_addr.s_addr = inet_addr("10.40.61.70");
+	send_address.sin_addr.s_addr = inet_addr("10.40.60.248");
+
+	//creating recieving address
+	sockaddr_in rec_address;
 
 	//creating the socket
 	SOCKET send_socket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (send_socket == SOCKET_ERROR)
+	{
+		cout << "Error Opening socket: Error " << WSAGetLastError();
+		return 1;
+	}
+
+	//creating rec socket
+	SOCKET rec_socket = socket(AF_INET, SOCK_DGRAM, 0);
+	if (rec_socket == SOCKET_ERROR)
 	{
 		cout << "Error Opening socket: Error " << WSAGetLastError();
 		return 1;
@@ -158,6 +169,18 @@ int main()
 	PacketClientAnnounce pca;
 	pca.type = Packet::e_clientAnnounce;
 	sendto(send_socket, (char *)&pca, sizeof(PacketClientAnnounce), 0, (SOCKADDR*)&send_address, sizeof(send_address));
+
+	//recieving
+	char buffer[1000];
+	int lenght = sizeof(rec_address);
+	int result = recvfrom(send_socket, buffer, 1000, 0, (SOCKADDR*)&rec_address, &lenght);
+
+	PacketServerInfo* pci;
+	pci = (PacketServerInfo*)buffer;
+	if (pci->type == Packet::e_serverInfo)
+	{
+		cout << pci->width << " " << pci->height << " " << std::endl;
+	}
 
 	//making something --- DO IT BELOW THIS POINT
 	PacketBox pb;
